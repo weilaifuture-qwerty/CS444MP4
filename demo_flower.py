@@ -61,9 +61,9 @@ def main(_):
     val_dataloader = DataLoader(val_data, batch_size=batch_size, shuffle=False)
 
     tmp_file_name = dir_name + '/best_model.pth'
-    device = torch.device('cuda:0')
+    # device = torch.device('cuda:0')
     # For Mac Users
-    # device = torch.device('mps')
+    device = torch.device('mps')
 
     writer = SummaryWriter(f'{dir_name}/lr{lr:0.6f}_wd{wd:0.6f}', flush_secs=10)
 
