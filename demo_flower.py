@@ -3,7 +3,7 @@ import torch
 from absl import app, flags
 from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
-from finetune import ViTLinear, inference, Trainer
+from finetune import ViTLinear, inference, Trainer, VPT
 import yaml
 from torch.optim.lr_scheduler import MultiStepLR
 
@@ -70,14 +70,15 @@ def main(_):
     # we suggest creating a class called VITPrompt and putting your logic there.
     # Then just initialize your model from that class.
     model = net_class(102, FLAGS.encoder)
+    # model = VPT(102, FLAGS.encoder)
     model.to(device)
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=wd, momentum=momentum)
-    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[60, 80], gamma=0.1)
+    # optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=wd, momentum=momentum)
+    # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[60, 80], gamma=0.1)
 
     trainer = Trainer(model, train_dataloader, val_dataloader, writer,
                       optimizer=optimizer, lr=lr, wd=wd, momentum=momentum,
-                      lr_scheduler=lr_scheduler, epochs=epochs,
+                      scheduler=scheduler, epochs=epochs,
                       device=device)
 
     best_val_acc, best_epoch = trainer.train(model_file_name=tmp_file_name)

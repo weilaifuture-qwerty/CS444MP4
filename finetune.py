@@ -12,24 +12,27 @@ def get_encoder(name):
     return model
 
 class VPT(nn.Module):
-    def __init(self, n_classes, encoder_name):
-        super(ViTLinear, self).__init__()
+    def __init__(self, n_classes, encoder_name):
+        super(VPT, self).__init__()
         
         self.vit_b = [get_encoder(encoder_name)]
+
+        for param in self.vit_b[0].parameters():
+            param.requires_grad = False
         
         self.vit_b[0].heads[0] = nn.Identity()
         self.linear = nn.Linear(768, n_classes)
-
-        self.prompt = nn.Parameter(torch.zeros(1, numh_layers, 10, 768))
+        self.prompt = nn.Parameter(torch.zeros(1, 12, 10, 768))
+        nn.init.uniform_(self.prompt, a=-0.0625, b=0.0625)
 
     def to(self, device):
-        super(ViTLinear, self).to(device)
+        super(VPT, self).to(device)
         self.vit_b[0] = self.vit_b[0].to(device)
         self.prompt = self.prompt.to(device)
 
     def forward(self, x):
-        with torch.no_grad():
-            out = self.vit_b[0](x)
+        prompt = self.prompt.expand(x.shape[0], -1, -1, -1) 
+        out = self.vit_b[0](x, prompt)
         y = self.linear(out)
         return y   
     
