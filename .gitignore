@@ -2,3 +2,4 @@ test_data/*
 flower-dataset-reduced/*
 flower-dataset-reduced.zip
 model/*
+__MACOSX/*
