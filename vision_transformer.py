@@ -111,43 +111,6 @@ class EncoderBlock(nn.Module):
         return x + y
 
 
-class Encoder(nn.Module):
-    """Transformer Model Encoder for sequence to sequence translation."""
-
-    def __init__(
-        self,
-        seq_length: int,
-        num_layers: int,
-        num_heads: int,
-        hidden_dim: int,
-        mlp_dim: int,
-        dropout: float,
-        attention_dropout: float,
-        norm_layer: Callable[..., torch.nn.Module] = partial(nn.LayerNorm, eps=1e-6),
-    ):
-        super().__init__()
-        # Note that batch_size is on the first dim because
-        # we have batch_first=True in nn.MultiAttention() by default
-        self.pos_embedding = nn.Parameter(torch.empty(1, seq_length, hidden_dim).normal_(std=0.02))  # from BERT
-        self.dropout = nn.Dropout(dropout)
-        layers: OrderedDict[str, nn.Module] = OrderedDict()
-        for i in range(num_layers):
-            layers[f"encoder_layer_{i}"] = EncoderBlock(
-                num_heads,
-                hidden_dim,
-                mlp_dim,
-                dropout,
-                attention_dropout,
-                norm_layer,
-            )
-        self.layers = nn.Sequential(layers)
-        self.ln = norm_layer(hidden_dim)
-
-    def forward(self, input: torch.Tensor):
-        torch._assert(input.dim() == 3, f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}")
-        input = input + self.pos_embedding
-        return self.ln(self.layers(self.dropout(input)))
-
 # class Encoder(nn.Module):
 #     """Transformer Model Encoder for sequence to sequence translation."""
 
@@ -180,14 +143,51 @@ class Encoder(nn.Module):
 #         self.layers = nn.Sequential(layers)
 #         self.ln = norm_layer(hidden_dim)
 
-#     def forward(self, input: torch.Tensor, prompt):
+#     def forward(self, input: torch.Tensor):
 #         torch._assert(input.dim() == 3, f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}")
-#         out = input + self.pos_embedding
-#         out = self.dropout(out)
-#         for i, layer in enumerate(self.layers):
-#             this_layers_prompt = torch.cat((out, torch.squeeze(prompt[:, i, :, :])), dim = 1)
-#             out = layer(this_layers_prompt)
-#         return self.ln(out)
+#         input = input + self.pos_embedding
+#         return self.ln(self.layers(self.dropout(input)))
+
+class Encoder(nn.Module):
+    """Transformer Model Encoder for sequence to sequence translation."""
+
+    def __init__(
+        self,
+        seq_length: int,
+        num_layers: int,
+        num_heads: int,
+        hidden_dim: int,
+        mlp_dim: int,
+        dropout: float,
+        attention_dropout: float,
+        norm_layer: Callable[..., torch.nn.Module] = partial(nn.LayerNorm, eps=1e-6),
+    ):
+        super().__init__()
+        # Note that batch_size is on the first dim because
+        # we have batch_first=True in nn.MultiAttention() by default
+        self.pos_embedding = nn.Parameter(torch.empty(1, seq_length, hidden_dim).normal_(std=0.02))  # from BERT
+        self.dropout = nn.Dropout(dropout)
+        layers: OrderedDict[str, nn.Module] = OrderedDict()
+        for i in range(num_layers):
+            layers[f"encoder_layer_{i}"] = EncoderBlock(
+                num_heads,
+                hidden_dim,
+                mlp_dim,
+                dropout,
+                attention_dropout,
+                norm_layer,
+            )
+        self.layers = nn.Sequential(layers)
+        self.ln = norm_layer(hidden_dim)
+
+    def forward(self, input: torch.Tensor, prompt):
+        torch._assert(input.dim() == 3, f"Expected (batch_size, seq_length, hidden_dim) got {input.shape}")
+        out = input + self.pos_embedding
+        out = self.dropout(out)
+        for i, layer in enumerate(self.layers):
+            this_layers_prompt = torch.cat((out, torch.squeeze(prompt[:, i, :, :])), dim = 1)
+            out = layer(this_layers_prompt)
+        return self.ln(out)
 
 
 class VisionTransformer(nn.Module):
@@ -319,8 +319,8 @@ class VisionTransformer(nn.Module):
 
         return x
 
-    # def forward(self, x: torch.Tensor, prompt):
-    def forward(self, x: torch.Tensor):
+    def forward(self, x: torch.Tensor, prompt):
+    # def forward(self, x: torch.Tensor):
         # Reshape and permute the input tensor
         x = self._process_input(x)
         n = x.shape[0]
@@ -329,8 +329,8 @@ class VisionTransformer(nn.Module):
         batch_class_token = self.class_token.expand(n, -1, -1)
         x = torch.cat([batch_class_token, x], dim=1)
 
-        # x = self.encoder(x, prompt)
-        x = self.encoder(x)
+        x = self.encoder(x, prompt)
+        # x = self.encoder(x)
 
         # Classifier "token" as used by standard language architectures
         x = x[:, 0]
