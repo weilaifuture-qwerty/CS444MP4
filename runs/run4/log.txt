@@ -1,0 +1,21 @@
+Running: vit_linear with encoder vit_b_32 ------------------
+Traceback (most recent call last):
+  File "/home/laiwei4/CS444MP4/demo_flower.py", line 95, in <module>
+    app.run(main)
+  File "/projects/illinois/class/cs444/saurabhg/fa2024/mp3/venv/lib/python3.9/site-packages/absl/app.py", line 308, in run
+    _run_main(main, args)
+  File "/projects/illinois/class/cs444/saurabhg/fa2024/mp3/venv/lib/python3.9/site-packages/absl/app.py", line 254, in _run_main
+    sys.exit(main(argv))
+  File "/home/laiwei4/CS444MP4/demo_flower.py", line 74, in main
+    model.to(device)
+  File "/home/laiwei4/CS444MP4/finetune.py", line 29, in to
+    super(VPT, self).to(device)
+  File "/projects/illinois/class/cs444/saurabhg/fa2024/mp3/venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1340, in to
+    return self._apply(convert)
+  File "/projects/illinois/class/cs444/saurabhg/fa2024/mp3/venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 900, in _apply
+    module._apply(fn)
+  File "/projects/illinois/class/cs444/saurabhg/fa2024/mp3/venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 927, in _apply
+    param_applied = fn(param)
+  File "/projects/illinois/class/cs444/saurabhg/fa2024/mp3/venv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1326, in convert
+    return t.to(
+RuntimeError: PyTorch is not linked with support for mps devices
