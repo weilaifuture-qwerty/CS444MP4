@@ -11,6 +11,29 @@ def get_encoder(name):
         model = vit_b_32(weights=ViT_B_32_Weights.IMAGENET1K_V1)
     return model
 
+class VPT(nn.Module):
+    def __init(self, n_classes, encoder_name):
+        super(ViTLinear, self).__init__()
+        
+        self.vit_b = [get_encoder(encoder_name)]
+        
+        self.vit_b[0].heads[0] = nn.Identity()
+        self.linear = nn.Linear(768, n_classes)
+
+        self.prompt = nn.Parameter(torch.zeros(1, numh_layers, 10, 768))
+
+    def to(self, device):
+        super(ViTLinear, self).to(device)
+        self.vit_b[0] = self.vit_b[0].to(device)
+        self.prompt = self.prompt.to(device)
+
+    def forward(self, x):
+        with torch.no_grad():
+            out = self.vit_b[0](x)
+        y = self.linear(out)
+        return y   
+    
+
 class ViTLinear(nn.Module):
     def __init__(self, n_classes, encoder_name):
         super(ViTLinear, self).__init__()

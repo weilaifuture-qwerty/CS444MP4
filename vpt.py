@@ -5,7 +5,6 @@ from torch.utils.data import DataLoader
 from tensorboardX import SummaryWriter
 from finetune import ViTLinear, inference, Trainer
 import yaml
-from torch.optim.lr_scheduler import MultiStepLR
 
 from datasets import get_flower102
 
@@ -36,10 +35,8 @@ def get_config(exp_name, encoder):
     momentum = config['momentum']
     net_class = encoder_registry[config['net_class']]
     batch_size = config['batch_size']
-    milestones = config['milestones']
-    gamma = config['gamma']
 
-    return net_class, dir_name, (optimizer, lr, wd, momentum), (scheduler, epochs, milestones, gamma), batch_size
+    return net_class, dir_name, (optimizer, lr, wd, momentum), (scheduler, epochs), batch_size
 
 
 def main(_):
@@ -50,7 +47,7 @@ def main(_):
 
     net_class, dir_name, \
         (optimizer, lr, wd, momentum), \
-        (scheduler, epochs, milestones, gamma), batch_size = \
+        (scheduler, epochs), batch_size = \
         get_config(FLAGS.exp_name, FLAGS.encoder)
 
     train_data = get_flower102(FLAGS.data_dir,'train')
@@ -72,12 +69,9 @@ def main(_):
     model = net_class(102, FLAGS.encoder)
     model.to(device)
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr, weight_decay=wd, momentum=momentum)
-    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[60, 80], gamma=0.1)
-
     trainer = Trainer(model, train_dataloader, val_dataloader, writer,
                       optimizer=optimizer, lr=lr, wd=wd, momentum=momentum,
-                      lr_scheduler=lr_scheduler, epochs=epochs,
+                      scheduler=scheduler, epochs=epochs,
                       device=device)
 
     best_val_acc, best_epoch = trainer.train(model_file_name=tmp_file_name)
