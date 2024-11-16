@@ -1,6 +1,6 @@
 # Do hyperparameter setting here
 vit_linear:
-    lr: 0.01
+    lr: 0.001
     wd: 0.01
     epochs: 100
     optimizer: 'sgd'
